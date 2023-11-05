@@ -79,27 +79,34 @@ public class GestorDB {
 					datos_atributo+=", \n";
 				}
 				String primary = JOptionPane.showInputDialog("Entra el nombre del atributo usado como clave primaria de esta tabla (ponlos todos separados por comas si son varios)");
-				datos_atributo +=" PRIMARY KEY("+primary+"),\n";
+				datos_atributo +=" PRIMARY KEY("+primary+")";
 				String nforeign = JOptionPane.showInputDialog("Cuantas claves foraneas hay?");
 				int num_foraneas = Integer.parseInt(nforeign);
-				for(int i=0; i<num_foraneas; i++) {
-					String foreign_attribute = JOptionPane.showInputDialog("Entra el nombre del "+(i+1)+" atributo usado como clave foranea");
-					String foreign_table = JOptionPane.showInputDialog("Entra el nombre de la tabla referenciada");
-					if(foreign_table.equals(name)) {
-						datos_atributo +=" FOREIGN KEY("+foreign_attribute+") REFERENCES "+foreign_table+ "("+primary+")\n ON DELETE CASCADE ON UPDATE CASCADE";
+				if(num_foraneas == 0) {
+					datos_atributo+="\n );";
+				}
+				else {
+					datos_atributo+=",\n";
+					for(int i=0; i<num_foraneas; i++) {
+						String foreign_attribute = JOptionPane.showInputDialog("Entra el nombre del "+(i+1)+" atributo usado como clave foranea");
+						String foreign_table = JOptionPane.showInputDialog("Entra el nombre de la tabla referenciada");
+						if(foreign_table.equals(name)) {
+							datos_atributo +=" FOREIGN KEY("+foreign_attribute+") REFERENCES "+foreign_table+ "("+primary+")\n ON DELETE CASCADE ON UPDATE CASCADE";
+						}
+						else {
+						    DatabaseMetaData metaData = conexion.getMetaData();
+							ResultSet rs = metaData.getPrimaryKeys(null, null, foreign_table);
+							rs.next();
+							datos_atributo +=" FOREIGN KEY("+foreign_attribute+") REFERENCES "+foreign_table+ "("+rs.getString("COLUMN_NAME")+")\n ON DELETE CASCADE ON UPDATE CASCADE";
+						}
+						if(i<num_foraneas-1) {
+							datos_atributo+=", \n";
+						}
+						else {
+							datos_atributo+=" \n );";
+						}
 					}
-					else {
-					    DatabaseMetaData metaData = conexion.getMetaData();
-						ResultSet rs = metaData.getPrimaryKeys(null, null, foreign_table);
-						rs.next();
-						datos_atributo +=" FOREIGN KEY("+foreign_attribute+") REFERENCES "+foreign_table+ "("+rs.getString("COLUMN_NAME")+")\n ON DELETE CASCADE ON UPDATE CASCADE";
-					}
-					if(i<num_foraneas-1) {
-						datos_atributo+=", \n";
-					}
-					else {
-						datos_atributo+=" \n );";
-					}
+					
 				}
 				crear_tabla+=datos_atributo;
 				Statement st = conexion.createStatement();
